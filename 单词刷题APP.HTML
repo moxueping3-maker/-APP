@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="高频词刷题">
+    <title>英语高频词汇高效刷题 App</title>
+    <!-- Confetti礼花特效库 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eeeffd;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --error: #ef4444;
+            --error-light: #fef2f2;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            height: 94vh;
+            max-height: 860px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 顶部状态栏 */
+        .header {
+            padding: 16px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-value.score {
+            color: #f59e0b;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .header-btn {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6366f1, #4f46e5);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* 主内容区 */
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* 导入视图 */
+        .view-import {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            text-align: center;
+        }
+
+        .import-header {
+            margin-bottom: 16px;
+        }
+
+        .import-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .import-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* 导入方式切换 Tab */
+        .tab-group {
+            display: flex;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .import-panel {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .import-panel.active {
+            display: flex;
+        }
+
+        .paste-textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-main);
+            outline: none;
+            resize: none;
+            margin-bottom: 16px;
+            background: #fafafa;
+        }
+
+        .paste-textarea:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+        }
+
+        .file-upload-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+            text-align: center;
+            border: none;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* 答题视图 */
+        .view-quiz {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .word-card {
+            background: #ffffff;
+            border: 1px solid #f3f4f6;
+            border-radius: var(--radius-md);
+            padding: 24px 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            position: relative;
+        }
+
+        .word-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .badge-new {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .badge-review {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .word-text {
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .phonetic-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .option-btn {
+            width: 100%;
+            background: #f9fafb;
+            border: 2px solid #f3f4f6;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+
+        .option-btn:active {
+            background: #f3f4f6;
+        }
+
+        .option-btn.correct {
+            background: var(--success-light);
+            border-color: var(--success);
+            color: #065f46;
+            font-weight: 700;
+        }
+
+        .option-btn.wrong {
+            background: var(--error-light);
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .option-btn.disabled {
+            pointer-events: none;
+        }
+
+        /* 答错反馈面板 */
+        .feedback-panel {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 4px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-header {
+            color: var(--error);
+            font-weight: 800;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .feedback-meaning {
+            font-size: 14px;
+            color: #9b1c1c;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .feedback-example-box {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 12px;
+            border-left: 4px solid var(--error);
+        }
+
+        .example-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .example-en {
+            font-size: 14px;
+            color: var(--text-main);
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .example-cn {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .next-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-weight: 800;
+            font-size: 16px;
+            margin-top: 14px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        /* 通关视图 */
+        .view-complete {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        /* 底部工具 */
+        .footer-tools {
+            padding: 14px 20px;
+            background: #ffffff;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal-btn.confirm {
+            background: var(--error);
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- 顶部状态栏 -->
+    <div class="header" id="appHeader" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">已掌握进度</span>
+                <span class="stat-value" id="progressText">0 / 0</span>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="guideBtn">📱 放到桌面</button>
+                <button class="header-btn" id="changeRepoBtn">📂 换词库</button>
+            </div>
+            <div class="stat-item" style="text-align: right;">
+                <span class="stat-label">能量积分</span>
+                <span class="stat-value score" id="scoreText">⚡ 0</span>
+            </div>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+    </div>
+
+    <!-- 主体区域 -->
+    <div class="content">
+        <!-- 1. 导入视图 -->
+        <div class="view-import" id="importView">
+            <div class="import-header">
+                <div style="font-size: 36px; margin-bottom: 8px;">📚</div>
+                <h2 class="import-title">导入词汇表</h2>
+                <p class="import-desc">一次导入，自动记忆进度，支持随时断点续刷</p>
+            </div>
+
+            <div class="tab-group">
+                <button class="tab-btn active" id="tabPasteBtn">📋 复制粘贴文本 (推荐)</button>
+                <button class="tab-btn" id="tabFileBtn">📁 上传 CSV/TXT 文件</button>
+            </div>
+
+            <!-- Tab 1: 粘贴文本 -->
+            <div class="import-panel active" id="panelPaste">
+                <textarea class="paste-textarea" id="pasteInput" placeholder="直接打开表格全选复制，粘贴到这里。&#10;&#10;例：&#10;apple,苹果&#10;banana,香蕉&#10;spoon,匙，勺子"></textarea>
+                <button class="file-upload-btn" id="startPasteBtn">解析并开始刷题 🚀</button>
+            </div>
+
+            <!-- Tab 2: 文件上传 -->
+            <div class="import-panel" id="panelFile">
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">选择手机本地保存的 .csv 或 .txt 文件</p>
+                    <label class="file-upload-btn" for="fileInput">选择文件并开始</label>
+                    <input type="file" id="fileInput">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 答题视图 -->
+        <div class="view-quiz" id="quizView" style="display: none;">
+            <div class="word-card">
+                <span class="word-badge badge-new" id="wordBadge">初筛新词</span>
+                <div class="word-text" id="targetWord">---</div>
+                <button class="phonetic-btn" id="playAudioBtn">🔊 点击发音</button>
+            </div>
+
+            <!-- 选项卡片列表 -->
+            <div class="options-list" id="optionsContainer"></div>
+
+            <!-- 答错后的例句讲解面板 -->
+            <div class="feedback-panel" id="feedbackPanel">
+                <div class="feedback-header">❌ 答错了，例句讲解：</div>
+                <div class="feedback-meaning" id="correctMeaningText">正确释义：--</div>
+                <div class="feedback-example-box">
+                    <div class="example-title">💡 例句解析</div>
+                    <div class="example-en" id="exampleEnText">Generating example...</div>
+                    <div class="example-cn" id="exampleCnText">解析生成中...</div>
+                </div>
+            </div>
+
+            <button class="next-btn" id="nextBtn">继续下一题 ➔</button>
+        </div>
+
+        <!-- 3. 通关视图 -->
+        <div class="view-complete" id="completeView">
+            <div style="font-size: 56px; margin-bottom: 12px;">🎉</div>
+            <h2 style="font-size: 22px; font-weight: 800; color: var(--success); margin-bottom: 8px;">太棒了！词库已全通关</h2>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">你已经成功掌握了本词库的所有单词！</p>
+            <button class="file-upload-btn" id="restartBtn">重新导入新词库</button>
+        </div>
+    </div>
+
+    <!-- 底部辅助工具栏 -->
+    <div class="footer-tools" id="appFooter" style="display: none;">
+        <button class="tool-btn" id="clearStorageBtn">重置当前进度</button>
+        <span style="font-size: 11px; color: #9ca3af;" id="roundText">状态：初筛第一轮</span>
+    </div>
+
+    <!-- 确认 Modal -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-card">
+            <div class="modal-title" id="modalTitle">提示</div>
+            <div class="modal-desc" id="modalDesc">内容...</div>
+            <div class="modal-actions" id="modalActions">
+                <button class="modal-btn cancel" id="modalCancelBtn">取消</button>
+                <button class="modal-btn confirm" id="modalConfirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- State ---
+    let vocabulary = [];
+    let pool = [];
+    let masteredWords = new Set();
+    let score = 0;
+    let currentItem = null;
+    let isAnswered = false;
+
+    // --- DOM Elements ---
+    const importView = document.getElementById('importView');
+    const quizView = document.getElementById('quizView');
+    const completeView = document.getElementById('completeView');
+    const appHeader = document.getElementById('appHeader');
+    const appFooter = document.getElementById('appFooter');
+
+    const tabPasteBtn = document.getElementById('tabPasteBtn');
+    const tabFileBtn = document.getElementById('tabFileBtn');
+    const panelPaste = document.getElementById('panelPaste');
+    const panelFile = document.getElementById('panelFile');
+
+    const pasteInput = document.getElementById('pasteInput');
+    const startPasteBtn = document.getElementById('startPasteBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    const progressText = document.getElementById('progressText');
+    const scoreText = document.getElementById('scoreText');
+    const progressBar = document.getElementById('progressBar');
+    const roundText = document.getElementById('roundText');
+
+    const targetWord = document.getElementById('targetWord');
+    const wordBadge = document.getElementById('wordBadge');
+    const playAudioBtn = document.getElementById('playAudioBtn');
+    const optionsContainer = document.getElementById('optionsContainer');
+    
+    const feedbackPanel = document.getElementById('feedbackPanel');
+    const correctMeaningText = document.getElementById('correctMeaningText');
+    const exampleEnText = document.getElementById('exampleEnText');
+    const exampleCnText = document.getElementById('exampleCnText');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const changeRepoBtn = document.getElementById('changeRepoBtn');
+    const guideBtn = document.getElementById('guideBtn');
+    const clearStorageBtn = document.getElementById('clearStorageBtn');
+
+    const customModal = document.getElementById('customModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+    // --- Tabs Switch ---
+    tabPasteBtn.addEventListener('click', () => {
+        tabPasteBtn.classList.add('active');
+        tabFileBtn.classList.remove('active');
+        panelPaste.classList.add('active');
+        panelFile.classList.remove('active');
+    });
+
+    tabFileBtn.addEventListener('click', () => {
+        tabFileBtn.classList.add('active');
+        tabPasteBtn.classList.remove('active');
+        panelFile.classList.add('active');
+        panelPaste.classList.remove('active');
+    });
+
+    // --- Speech Synthesis ---
+    function speakText(text, rate = 0.85) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = rate;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // --- LocalStorage ---
+    const STORAGE_KEY = 'vocab_app_persistent_data_v6';
+
+    function saveProgress() {
+        try {
+            const data = {
+                vocabulary,
+                pool,
+                masteredWords: Array.from(masteredWords),
+                score
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.error('Save failed:', e);
+        }
+    }
+
+    function loadProgress() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.vocabulary && data.vocabulary.length > 0) {
+                    vocabulary = data.vocabulary || [];
+                    pool = data.pool || [];
+                    masteredWords = new Set(data.masteredWords || []);
+                    score = data.score || 0;
+                    return true;
+                }
+            } catch (e) {
+                console.error('Load failed:', e);
+            }
+        }
+        return false;
+    }
+
+    // 判断字符串是否仅仅是常见的英语词性标签
+    function isPOS(str) {
+        const s = str.trim().toLowerCase().replace(/\.$/, '');
+        const posSet = new Set(['v', 'n', 'adj', 'adv', 'prep', 'conj', 'pron', 'art', 'num', 'interj', 'vt', 'vi', 'abbr', 'phr', 'aux']);
+        return posSet.has(s);
+    }
+
+    // --- Parser Engine ---
+    startPasteBtn.addEventListener('click', () => {
+        const rawText = pasteInput.value.trim();
+        if (!rawText) {
+            showModal('提示', '请先在文本框里粘贴您的词汇列表内容！', false);
+            return;
+        }
+        parseAndInitVocabulary(rawText);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            parseAndInitVocabulary(evt.target.result);
+        };
+        reader.readAsText(file, 'UTF-8');
+    });
+
+    function parseAndInitVocabulary(text) {
+        const lines = text.split(/\r?\n/);
+        const parsed = [];
+
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed) return;
+
+            let parts = [];
+            if (trimmed.includes(',')) {
+                parts = trimmed.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+            } else if (trimmed.includes('\t')) {
+                parts = trimmed.split('\t').map(s => s.trim());
+            } else {
+                const m = trimmed.match(/^([^\s]+)\s+(.+)$/);
+                if (m) parts = [m[1], m[2]];
+            }
+
+            parts = parts.filter(p => p.length > 0);
+            if (parts.length < 2) return;
+
+            // 智能寻找真正的单词列（排除开头的数字列和单纯词性列如 v. n. adj.）
+            let wordIdx = -1;
+            for (let i = 0; i < parts.length; i++) {
+                let token = parts[i].trim();
+                // 必须是纯英文字符或包含短横线/撇号，且长度大于1，且不是纯词性标记
+                if (/^[a-zA-Z\s\-\'\.]+$/.test(token) && token.replace(/[^a-zA-Z]/g, '').length >= 2 && !isPOS(token) && !/^(word|单词|序号|no\.?)$/i.test(token)) {
+                    wordIdx = i;
+                    break;
+                }
+            }
+
+            if (wordIdx === -1) return;
+
+            let word = parts[wordIdx].trim();
+
+            let restParts = parts.filter((_, idx) => idx !== wordIdx);
+            let meaning = '';
+            let exampleEn = '';
+            let exampleCn = '';
+
+            restParts.forEach(p => {
+                const hasChinese = /[\u4e00-\u9fa5]/.test(p);
+                const isEnglishSentence = /[a-zA-Z]{3,}\s+[a-zA-Z]{3,}/.test(p);
+
+                if (hasChinese && !meaning) {
+                    const engStart = p.search(/\b[a-zA-Z]{3,}\b\s+\b[a-zA-Z]{3,}\b/);
+                    if (engStart > 0) {
+                        meaning = p.substring(0, engStart).trim();
+                        if (!exampleEn) exampleEn = p.substring(engStart).trim();
+                    } else {
+                        meaning = p;
+                    }
+                } else if (isEnglishSentence && !exampleEn) {
+                    exampleEn = p;
+                } else if (hasChinese && meaning && !exampleCn) {
+                    exampleCn = p;
+                }
+            });
+
+            if (!meaning) {
+                meaning = restParts.join(' ').trim();
+                const engStart = meaning.search(/\b[a-zA-Z]{3,}\b\s+\b[a-zA-Z]{3,}\b/);
+                if (engStart > 0) {
+                    if (!exampleEn) exampleEn = meaning.substring(engStart).trim();
+                    meaning = meaning.substring(0, engStart).trim();
+                }
+            }
+
+            meaning = meaning.replace(/^[\,\;\:\s]+|[\,\;\:\s]+$/g, '');
+
+            if (word && meaning && !isPOS(word)) {
+                parsed.push({
+                    word: word,
+                    meaning: meaning,
+                    rawExampleEn: exampleEn,
+                    rawExampleCn: exampleCn
+                });
+            }
+        });
+
+        if (parsed.length === 0) {
+            showModal('解析失败', '未能解析出有效的英文单词，请确认内容包含了英文单词与中文释义！', false);
+            return;
+        }
+
+        vocabulary = parsed;
+        masteredWords.clear();
+        score = 0;
+        
+        pool = vocabulary.map(item => ({
+            word: item.word,
+            meaning: item.meaning,
+            rawExampleEn: item.rawExampleEn,
+            rawExampleCn: item.rawExampleCn,
+            isReview: false,
+            reviewStreak: 0
+        }));
+
+        saveProgress();
+        startApp();
+    }
+
+    // --- App Lifecycle ---
+    function startApp() {
+        importView.style.display = 'none';
+        appHeader.style.display = 'block';
+        appFooter.style.display = 'flex';
+        renderHeader();
+        nextQuestion();
+    }
+
+    function renderHeader() {
+        const total = vocabulary.length;
+        const mastered = masteredWords.size;
+        progressText.innerText = `${mastered} / ${total}`;
+        scoreText.innerText = `⚡ ${score}`;
+        
+        const pct = total > 0 ? (mastered / total) * 100 : 0;
+        progressBar.style.width = `${pct}%`;
+
+        const hasReviewItems = pool.some(item => item.isReview);
+        roundText.innerText = hasReviewItems ? '状态：错题消灭轮' : '状态：初筛第一轮';
+    }
+
+    function nextQuestion() {
+        isAnswered = false;
+        feedbackPanel.style.display = 'none';
+        nextBtn.style.display = 'none';
+
+        if (pool.length === 0) {
+            showCompleteView();
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        currentItem = pool[randomIndex];
+
+        targetWord.innerText = currentItem.word;
+        if (currentItem.isReview) {
+            wordBadge.className = 'word-badge badge-review';
+            wordBadge.innerText = `错题重练 (${currentItem.reviewStreak}/2)`;
+        } else {
+            wordBadge.className = 'word-badge badge-new';
+            wordBadge.innerText = '初筛新词';
+        }
+
+        speakText(currentItem.word);
+
+        const options = generateOptions(currentItem);
+        renderOptions(options);
+
+        quizView.style.display = 'flex';
+        completeView.style.display = 'none';
+    }
+
+    playAudioBtn.addEventListener('click', () => {
+        if (currentItem) speakText(currentItem.word);
+    });
+
+    function generateOptions(correctItem) {
+        const opts = [correctItem.meaning];
+        const candidates = vocabulary.filter(v => v.meaning && v.meaning !== correctItem.meaning);
+        
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+
+        for (let i = 0; i < Math.min(2, candidates.length); i++) {
+            opts.push(candidates[i].meaning);
+        }
+
+        for (let i = opts.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [opts[i], opts[j]] = [opts[j], opts[i]];
+        }
+
+        return opts;
+    }
+
+    function renderOptions(options) {
+        optionsContainer.innerHTML = '';
+        options.forEach(optText => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = optText;
+            btn.addEventListener('click', () => handleAnswer(optText, btn));
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(selectedText, btnElement) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const allButtons = optionsContainer.querySelectorAll('.option-btn');
+        allButtons.forEach(b => b.classList.add('disabled'));
+
+        const isCorrect = selectedText === currentItem.meaning;
+
+        if (isCorrect) {
+            btnElement.classList.add('correct');
+            score += 1;
+            
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 45, spread: 55, origin: { y: 0.8 } });
+            }
+
+            if (!currentItem.isReview) {
+                masteredWords.add(currentItem.word);
+                removeFromPool(currentItem);
+            } else {
+                currentItem.reviewStreak += 1;
+                if (currentItem.reviewStreak >= 2) {
+                    masteredWords.add(currentItem.word);
+                    removeFromPool(currentItem);
+                }
+            }
+
+            saveProgress();
+            renderHeader();
+            nextBtn.style.display = 'block';
+        } else {
+            btnElement.classList.add('wrong');
+            allButtons.forEach(b => {
+                if (b.innerText === currentItem.meaning) {
+                    b.classList.add('correct');
+                }
+            });
+
+            currentItem.isReview = true;
+            currentItem.reviewStreak = 0;
+
+            saveProgress();
+            renderHeader();
+
+            showFeedback();
+            nextBtn.style.display = 'block';
+        }
+    }
+
+    function removeFromPool(item) {
+        const idx = pool.indexOf(item);
+        if (idx > -1) pool.splice(idx, 1);
+    }
+
+    function showFeedback() {
+        correctMeaningText.innerText = `正确释义：${currentItem.meaning}`;
+        
+        let exEn = currentItem.rawExampleEn;
+        let exCn = currentItem.rawExampleCn;
+
+        if (!exEn) {
+            exEn = `He remembered the word "${currentItem.word}" during his study.`;
+            exCn = `他在学习中记住了“${currentItem.word}”这个单词。`;
+        }
+
+        exampleEnText.innerText = exEn;
+        exampleCnText.innerText = exCn;
+        feedbackPanel.style.display = 'block';
+
+        speakText(`${currentItem.word}. ${exEn}`);
+    }
+
+    nextBtn.addEventListener('click', () => {
+        nextQuestion();
+    });
+
+    function showCompleteView() {
+        quizView.style.display = 'none';
+        completeView.style.display = 'flex';
+    }
+
+    function showModal(title, desc, isConfirm = true, onConfirm = null) {
+        modalTitle.innerText = title;
+        modalDesc.innerHTML = desc;
+        customModal.style.display = 'flex';
+
+        if (!isConfirm) {
+            modalCancelBtn.style.display = 'none';
+            modalConfirmBtn.innerText = '我知道了';
+            modalConfirmBtn.onclick = () => { customModal.style.display = 'none'; };
+        } else {
+            modalCancelBtn.style.display = 'block';
+            modalConfirmBtn.innerText = '确定重置';
+            modalConfirmBtn.onclick = () => {
+                customModal.style.display = 'none';
+                if (onConfirm) onConfirm();
+            };
+        }
+    }
+
+    modalCancelBtn.addEventListener('click', () => {
+        customModal.style.display = 'none';
+    });
+
+    changeRepoBtn.addEventListener('click', () => {
+        showModal('确认更换词库？', '更换词库将清空当前词库的学习进度和积分记录。', true, () => {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        });
+    });
+
+    clearStorageBtn.addEventListener('click', () => {
+        showModal('确认重置进度？', '确定要清空当前的做题记录并重新开始练习吗？', true, () => {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        });
+    });
+
+    guideBtn.addEventListener('click', () => {
+        showModal(
+            '📱 如何保存到 Safari 网页？', 
+            '<b>如果你在微信 / QQ 中打开：</b><br>点击右上角“...”图标，选择<b>“在 Safari 中打开”</b>。<br><br>' +
+            '<b>保存到桌面（极速秒开）：</b><br>1. 点击 Safari 底部中间的“分享”按钮 📤<br>2. 选择<b>“添加到主屏幕”</b>。', 
+            false
+        );
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+    });
+
+    if (loadProgress()) {
+        startApp();
+    }
+</script>
+</body>
+</html>
